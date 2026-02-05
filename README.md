@@ -45,5 +45,14 @@ Money Manager offers a clean, intuitive interface for managing your personal fin
 
 *Link to live demo to be added.*
 
+## Backend Repository
+The backend for this project is maintained separately.
+
+Backend GitHub Repository:
+https://github.com/your-username/money-manager-backend
+
+Live Backend URL:
+https://your-backend.onrender.com
+
 ---
 *Submitted for the Hackathon.*
