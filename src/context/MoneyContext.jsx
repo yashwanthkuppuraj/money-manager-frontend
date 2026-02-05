@@ -100,37 +100,72 @@ export const MoneyProvider = ({ children }) => {
         return balances;
     }, [transactions]);
 
+    // CRUD Operations with Demo Mode Support
     const addTransaction = async (transaction) => {
-        try {
-            const { data } = await api.createTransaction(transaction);
-            setTransactions(prev => [data, ...prev]);
-        } catch (error) {
-            console.error("Failed to add transaction", error);
-            alert("Error adding transaction");
+        if (user) {
+            // Authenticated: Use API
+            try {
+                const { data } = await api.createTransaction(transaction);
+                setTransactions(prev => [data, ...prev]);
+            } catch (error) {
+                console.error("Failed to add transaction", error);
+                alert("Error adding transaction");
+            }
+        } else {
+            // Demo Mode: Local State
+            const newTx = {
+                ...transaction,
+                _id: Date.now().toString(), // Temp ID
+                createdAt: new Date().toISOString(),
+                date: transaction.date || new Date().toISOString()
+            };
+            setTransactions(prev => [newTx, ...prev]);
         }
     };
 
     const updateTransaction = async (id, updatedData) => {
-        try {
-            const { data } = await api.updateTransaction(id, updatedData);
-            setTransactions(prev => prev.map(t => t._id === id ? data : t)); // MongoDB uses _id
-        } catch (error) {
-            console.error("Failed to update transaction", error);
-            if (error.response && error.response.data && error.response.data.message) {
-                alert(error.response.data.message); // Show backend error (e.g. 12hr limit)
-            } else {
-                alert("Error updating transaction");
+        if (user) {
+            // Authenticated: Use API
+            try {
+                const { data } = await api.updateTransaction(id, updatedData);
+                setTransactions(prev => prev.map(t => t._id === id ? data : t));
+            } catch (error) {
+                console.error("Failed to update transaction", error);
+                alert(error.response?.data?.message || "Error updating transaction");
             }
+        } else {
+            // Demo Mode: Local State
+            setTransactions(prev => prev.map(t => {
+                if (t._id === id) {
+                    // Enforce 12-hour restriction in Demo Mode
+                    const createdAt = new Date(t.createdAt);
+                    const now = new Date();
+                    const hoursDiff = (now - createdAt) / (1000 * 60 * 60);
+
+                    if (hoursDiff > 12) {
+                        alert("Edit window expired. Demo restriction.");
+                        return t;
+                    }
+                    return { ...t, ...updatedData };
+                }
+                return t;
+            }));
         }
     };
 
     const deleteTransaction = async (id) => {
-        try {
-            await api.deleteTransaction(id);
+        if (user) {
+            // Authenticated: Use API
+            try {
+                await api.deleteTransaction(id);
+                setTransactions(prev => prev.filter(t => t._id !== id));
+            } catch (error) {
+                console.error("Failed to delete transaction", error);
+                alert("Error deleting transaction");
+            }
+        } else {
+            // Demo Mode: Local State
             setTransactions(prev => prev.filter(t => t._id !== id));
-        } catch (error) {
-            console.error("Failed to delete transaction", error);
-            alert("Error deleting transaction");
         }
     };
 

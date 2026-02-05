@@ -25,13 +25,13 @@ const Settings = () => {
 
     const fetchSettings = async () => {
         try {
-            // We can assume the API call matches the context, but asking the API is safer for fresh data
-            // However, to reuse context logic, we might just want to use what's in 'user'
-            // Since 'updateUserSettings' will update the context, let's trust 'user.settings'
-            // If 'user' is null, we do nothing.
+            // If 'user' is null (Demo Mode), we do not fetch from server.
+            // API calls will fail (401).
             if (user && user.token) {
                 const res = await API.get('/settings'); // Interceptor handles token
                 setSettings(res.data);
+            } else {
+                // Demo Mode: Do nothing or use default local state (already set in initial useState)
             }
         } catch (error) {
             console.error("Failed to fetch settings", error);

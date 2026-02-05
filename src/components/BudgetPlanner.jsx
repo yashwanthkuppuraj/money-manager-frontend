@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMoney } from '../context/MoneyContext';
+import { useAuth } from '../context/AuthContext';
 import * as api from '../services/api';
 import { format, addMonths, subMonths, isSameMonth, parseISO } from 'date-fns';
 import { ChevronLeft, ChevronRight, Plus, Receipt, AlertCircle, Edit2, Trash2, X, Check } from 'lucide-react';
@@ -9,6 +10,7 @@ const DIVISIONS = ['Office', 'Personal'];
 
 const BudgetPlanner = () => {
     const { transactions } = useMoney();
+    const { user } = useAuth(); // Get user status
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [budgets, setBudgets] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -27,19 +29,34 @@ const BudgetPlanner = () => {
     // Fetch Budgets
     const loadBudgets = async () => {
         setIsLoading(true);
-        try {
-            const { data } = await api.fetchBudgets(currentMonthStr);
-            setBudgets(data);
-        } catch (error) {
-            console.error("Failed to load budgets", error);
-        } finally {
-            setIsLoading(false);
+        if (user) {
+            // Authenticated: API Fetch
+            try {
+                const { data } = await api.fetchBudgets(currentMonthStr);
+                setBudgets(data);
+            } catch (error) {
+                console.error("Failed to load budgets", error);
+            } finally {
+                setIsLoading(false);
+            }
+        } else {
+            // Demo Mode: LocalStorage
+            try {
+                const stored = JSON.parse(localStorage.getItem('demo_budgets') || '[]');
+                const filtered = stored.filter(b => b.month === currentMonthStr);
+                setBudgets(filtered);
+            } catch (e) {
+                console.error("Demo budget load error", e);
+                setBudgets([]);
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
     useEffect(() => {
         loadBudgets();
-    }, [currentMonthStr]);
+    }, [currentMonthStr, user]); // Reload if user context changes
 
     // Calculate Spending
     const spendingMap = useMemo(() => {
@@ -73,33 +90,68 @@ const BudgetPlanner = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const payload = {
-                month: currentMonthStr,
-                category: formData.category,
-                division: formData.division,
-                budgetAmount: Number(formData.budgetAmount)
-            };
+        const payload = {
+            month: currentMonthStr,
+            category: formData.category,
+            division: formData.division,
+            budgetAmount: Number(formData.budgetAmount)
+        };
 
-            if (editingBudget) {
-                await api.updateBudget(editingBudget._id, payload);
-            } else {
-                await api.createBudget(payload);
+        if (user) {
+            // Authenticated: API Save
+            try {
+                if (editingBudget) {
+                    await api.updateBudget(editingBudget._id, payload);
+                } else {
+                    await api.createBudget(payload);
+                }
+                setIsModalOpen(false);
+                loadBudgets();
+            } catch (error) {
+                alert("Error saving budget");
             }
-            setIsModalOpen(false);
-            loadBudgets();
-        } catch (error) {
-            alert("Error saving budget");
+        } else {
+            // Demo Mode: LocalStorage Save
+            try {
+                const stored = JSON.parse(localStorage.getItem('demo_budgets') || '[]');
+                if (editingBudget) {
+                    // Update
+                    const updated = stored.map(b => b._id === editingBudget._id ? { ...b, ...payload } : b);
+                    localStorage.setItem('demo_budgets', JSON.stringify(updated));
+                } else {
+                    // Create
+                    const newBudget = { ...payload, _id: Date.now().toString() };
+                    localStorage.setItem('demo_budgets', JSON.stringify([...stored, newBudget]));
+                }
+                setIsModalOpen(false);
+                loadBudgets();
+            } catch (error) {
+                alert("Error saving demo budget");
+            }
         }
     };
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this budget?")) return;
-        try {
-            await api.deleteBudget(id);
-            loadBudgets();
-        } catch (error) {
-            alert("Error deleting budget");
+
+        if (user) {
+            // Authenticated: API Delete
+            try {
+                await api.deleteBudget(id);
+                loadBudgets();
+            } catch (error) {
+                alert("Error deleting budget");
+            }
+        } else {
+            // Demo Mode: LocalStorage Delete
+            try {
+                const stored = JSON.parse(localStorage.getItem('demo_budgets') || '[]');
+                const filtered = stored.filter(b => b._id !== id);
+                localStorage.setItem('demo_budgets', JSON.stringify(filtered));
+                loadBudgets();
+            } catch (error) {
+                alert("Error deleting demo budget");
+            }
         }
     };
 
