@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Save, Check, Settings as SettingsIcon } from 'lucide-react';
-import axios from 'axios';
+import API from '../services/api';
 
 const Settings = () => {
     const { user, updateUserSettings } = useAuth();
@@ -30,12 +30,7 @@ const Settings = () => {
             // Since 'updateUserSettings' will update the context, let's trust 'user.settings'
             // If 'user' is null, we do nothing.
             if (user && user.token) {
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${user.token}`,
-                    },
-                };
-                const res = await axios.get('http://localhost:5000/api/settings', config);
+                const res = await API.get('/settings'); // Interceptor handles token
                 setSettings(res.data);
             }
         } catch (error) {
@@ -89,8 +84,8 @@ const Settings = () => {
                                     key={type}
                                     onClick={() => handleChange('defaultTransactionType', type)}
                                     className={`px-6 py-3 rounded-xl font-medium capitalize transition-all ${settings.defaultTransactionType === type
-                                            ? 'bg-[#FA8112] text-[#FAF3E1] shadow-md'
-                                            : 'bg-gray-50 text-[#222222]/60 hover:bg-gray-100'
+                                        ? 'bg-[#FA8112] text-[#FAF3E1] shadow-md'
+                                        : 'bg-gray-50 text-[#222222]/60 hover:bg-gray-100'
                                         }`}
                                 >
                                     {type}

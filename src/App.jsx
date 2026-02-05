@@ -16,7 +16,9 @@ import Settings from './components/Settings';
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
-  if (!user) {
+  const isDemoMode = true; // Enabled for Hackathon Demo
+
+  if (!user && !isDemoMode) {
     return <Navigate to="/login" replace />;
   }
   return children;

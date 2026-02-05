@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useMemo } from 'react';
 import * as api from '../services/api';
+import { useAuth } from './AuthContext';
 
 const MoneyContext = createContext();
 
@@ -13,19 +14,34 @@ export const MoneyProvider = ({ children }) => {
     // eslint-disable-next-line no-unused-vars
     const ACCOUNTS = ['Cash', 'Bank', 'Wallet'];
     const [transactions, setTransactions] = useState([]);
+    const { user } = useAuth();
 
     // Fetch Transactions on Mount
     useEffect(() => {
         const loadTransactions = async () => {
-            try {
-                const { data } = await api.fetchTransactions();
-                setTransactions(data);
-            } catch (error) {
-                console.error("Failed to fetch transactions", error);
+            if (user) {
+                // Logged In: Fetch from API
+                try {
+                    const { data } = await api.fetchTransactions();
+                    setTransactions(data);
+                } catch (error) {
+                    console.error("Failed to fetch transactions", error);
+                }
+            } else {
+                // Demo Mode: Mock Data (Hackathon)
+                const today = new Date();
+                const demoData = [
+                    { _id: '1', type: 'income', amount: 50000, date: today.toISOString(), description: 'Salary', category: 'Salary', account: 'Bank' },
+                    { _id: '2', type: 'expense', amount: 1500, date: new Date(today.getTime() - 86400000).toISOString(), description: 'Grocery Shopping', category: 'Food', account: 'Cash' },
+                    { _id: '3', type: 'expense', amount: 2000, date: new Date(today.getTime() - 172800000).toISOString(), description: 'Uber Ride', category: 'Travel', account: 'Wallet' },
+                    { _id: '4', type: 'transfer', amount: 5000, date: new Date(today.getTime() - 200000000).toISOString(), description: 'Savings', fromAccount: 'Bank', toAccount: 'Cash' },
+                    { _id: '5', type: 'income', amount: 12000, date: new Date(today.getTime() - 10000000).toISOString(), description: 'Freelance Project', category: 'Side Hustle', account: 'Bank' },
+                ];
+                setTransactions(demoData);
             }
         };
         loadTransactions();
-    }, []);
+    }, [user]);
 
     // Derived Account Balances (Strict Implementation)
     const accountBalances = useMemo(() => {
@@ -54,23 +70,15 @@ export const MoneyProvider = ({ children }) => {
             fromAccount = toTitleCase(fromAccount);
             toAccount = toTitleCase(toAccount);
 
-            // Debug Log
-            // console.log(`Txn: ${type} | Amt: ${amt} | Acc: ${account} | From: ${fromAccount} | To: ${toAccount}`);
-
             if (type === 'income') {
-                // Check case-insensitive match if needed, but for now strict
                 if (balances[account] !== undefined) {
                     balances[account] += amt;
-                } else {
-                    console.warn(`[MoneyContext] Income ignored. Unknown account: ${account}`);
                 }
             }
 
             if (type === 'expense') {
                 if (balances[account] !== undefined) {
                     balances[account] -= amt;
-                } else {
-                    console.warn(`[MoneyContext] Expense ignored. Unknown account: ${account}`);
                 }
             }
 
@@ -91,8 +99,6 @@ export const MoneyProvider = ({ children }) => {
         console.log("Calculated Balances:", balances);
         return balances;
     }, [transactions]);
-
-
 
     const addTransaction = async (transaction) => {
         try {
