@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .glass {
+    @apply bg-[#F5E7C6]/60 backdrop-blur-md border border-[#222222]/5 shadow-lg;
+  }
+
+  .card-base {
+    @apply bg-[#FAF3E1] border border-[#F5E7C6] shadow-sm rounded-2xl;
+  }
+}
+
+:root {
+  --color-bg: #FAF3E1;
+  --color-surface: #F5E7C6;
+  --color-primary: #FA8112;
+  --color-text: #222222;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
