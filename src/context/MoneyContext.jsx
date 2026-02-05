@@ -31,11 +31,11 @@ export const MoneyProvider = ({ children }) => {
                 // Demo Mode: Mock Data (Hackathon)
                 const today = new Date();
                 const demoData = [
-                    { _id: '1', type: 'income', amount: 50000, date: today.toISOString(), description: 'Salary', category: 'Salary', account: 'Bank' },
-                    { _id: '2', type: 'expense', amount: 1500, date: new Date(today.getTime() - 86400000).toISOString(), description: 'Grocery Shopping', category: 'Food', account: 'Cash' },
-                    { _id: '3', type: 'expense', amount: 2000, date: new Date(today.getTime() - 172800000).toISOString(), description: 'Uber Ride', category: 'Travel', account: 'Wallet' },
-                    { _id: '4', type: 'transfer', amount: 5000, date: new Date(today.getTime() - 200000000).toISOString(), description: 'Savings', fromAccount: 'Bank', toAccount: 'Cash' },
-                    { _id: '5', type: 'income', amount: 12000, date: new Date(today.getTime() - 10000000).toISOString(), description: 'Freelance Project', category: 'Side Hustle', account: 'Bank' },
+                    { _id: '1', type: 'income', amount: 50000, date: today.toISOString(), createdAt: today.toISOString(), description: 'Salary', category: 'Salary', account: 'Bank' },
+                    { _id: '2', type: 'expense', amount: 1500, date: new Date(today.getTime() - 86400000).toISOString(), createdAt: new Date(today.getTime() - 86400000).toISOString(), description: 'Grocery Shopping', category: 'Food', account: 'Cash' },
+                    { _id: '3', type: 'expense', amount: 2000, date: new Date(today.getTime() - 172800000).toISOString(), createdAt: new Date(today.getTime() - 172800000).toISOString(), description: 'Uber Ride', category: 'Travel', account: 'Wallet' },
+                    { _id: '4', type: 'transfer', amount: 5000, date: new Date(today.getTime() - 200000000).toISOString(), createdAt: new Date(today.getTime() - 200000000).toISOString(), description: 'Savings', fromAccount: 'Bank', toAccount: 'Cash' },
+                    { _id: '5', type: 'income', amount: 12000, date: new Date(today.getTime() - 10000000).toISOString(), createdAt: new Date(today.getTime() - 10000000).toISOString(), description: 'Freelance Project', category: 'Side Hustle', account: 'Bank' },
                 ];
                 setTransactions(demoData);
             }

@@ -40,8 +40,10 @@ const TransactionList = ({ transactions, updateTransaction, deleteTransaction, o
     }, []);
 
     const canEdit = (createdAt) => {
-        if (!now) return false;
-        const hoursDiff = differenceInHours(now, createdAt);
+        if (!now || !createdAt) return false;
+        // Parse date safely
+        const createdDate = typeof createdAt === 'string' ? parseISO(createdAt) : new Date(createdAt);
+        const hoursDiff = differenceInHours(now, createdDate);
         return hoursDiff <= ResultTimeLimit;
     };
 
